@@ -4,8 +4,8 @@
 
 - `cancelPayment($id)` (`POST /v1/payments/{id}/cancel`) : annule définitivement un paiement que personne n'a commencé à payer (le client change d'offre). Rend le paiement `expired`, sans lien ; rejouer rend le même résultat. Refus : `payment_already_completed` (non rejouable) et `payment_in_progress` (rejouable, comme avant). Un identifiant vide est refusé sans appel.
 - `Payment` : `canceledAt`, `cancelReason` et `reason` (avis `payment.expired` : `canceled` ou `timeout`), tous facultatifs.
-- Routes toutes faites : `POST /payments/{id}/cancel` (mêmes contrôles que `GET /payments/{id}`) ; sur `reference_conflict`, l'ancien essai est relu par sa référence et annulé s'il est encore ouvert avant l'essai suivant. Payé, ou annulation refusée (`payment_in_progress`, `payment_already_completed`) : aucun second paiement, l'erreur remonte à l'app.
-- Contrat v1 à jour (30 cas, `query_includes` vérifié).
+- Routes toutes faites : `POST /payments/{id}/cancel` (mêmes contrôles que `GET /payments/{id}`) ; sur `reference_conflict`, l'ancien essai est relu par sa référence et annulé s'il est encore ouvert avant l'essai suivant. Payé, ou annulation refusée (`payment_in_progress`, `payment_already_completed`) : aucun second paiement, l'erreur remonte à l'app. Une annulation qui répond 404 (serveur qui ne l'a pas encore) laisse passer à l'essai suivant, comme avant.
+- Contrat v1 à jour (31 cas, `query_includes` vérifié).
 - Documentation : « Le client change d'offre ou revient plus tard » annule l'ancien essai avant d'en créer un nouveau.
 
 ## 0.3.0 — 2026-11-15

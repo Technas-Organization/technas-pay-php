@@ -129,7 +129,15 @@ final class AppRoutes
             throw new TechnasPayException('payment_already_completed', "L'essai précédent de cette commande est déjà payé", 409);
         }
         if ($previous->status !== 'expired') {
-            $this->pay->cancelPayment($previous->id);
+            try {
+                $this->pay->cancelPayment($previous->id);
+            } catch (TechnasPayException $e) {
+                // 404 (paiement introuvable, ou serveur qui n'a pas encore l'annulation) : essai suivant,
+                // comme avant. Tout autre refus remonte : aucun second paiement.
+                if ($e->status !== 404) {
+                    throw $e;
+                }
+            }
         }
     }
 

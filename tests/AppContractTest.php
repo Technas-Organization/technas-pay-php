@@ -33,8 +33,8 @@ final class AppContractTest extends TestCase
         foreach ($contract['cases'] as $c) {
             $out[$c['name']] = [$c];
         }
-        if (count($out) !== 30) {
-            throw new \LogicException('le contrat v1 a 30 cas, lu : ' . count($out));
+        if (count($out) !== 31) {
+            throw new \LogicException('le contrat v1 a 31 cas, lu : ' . count($out));
         }
         return $out;
     }
@@ -87,9 +87,9 @@ final class AppContractTest extends TestCase
         }
     }
 
-    public function testLeContratA30Cas(): void
+    public function testLeContratA31Cas(): void
     {
-        self::assertCount(30, self::cases());
+        self::assertCount(31, self::cases());
     }
 
     public function testChangementDOffreAncienEssaiDejaPayeAucunSecondPaiement(): void
