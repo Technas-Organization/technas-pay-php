@@ -33,6 +33,9 @@ final class AppContractTest extends TestCase
         foreach ($contract['cases'] as $c) {
             $out[$c['name']] = [$c];
         }
+        if (count($out) !== 30) {
+            throw new \LogicException('le contrat v1 a 30 cas, lu : ' . count($out));
+        }
         return $out;
     }
 
@@ -77,7 +80,16 @@ final class AppContractTest extends TestCase
             foreach ($e['body_includes'] ?? [] as $k => $v) {
                 self::assertEquals($v, $gw->jsonBody($i)[$k], $k);
             }
+            parse_str((string) parse_url($gw->calls[$i]['url'], PHP_URL_QUERY), $query);
+            foreach ($e['query_includes'] ?? [] as $k => $v) {
+                self::assertSame($v, $query[$k] ?? null, "paramètre $k");
+            }
         }
+    }
+
+    public function testLeContratA30Cas(): void
+    {
+        self::assertCount(30, self::cases());
     }
 
     public function testWebhookSigneRefuseEtNonBranche(): void
