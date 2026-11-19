@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0 — 2026-11-19
+
+- Avis `settlement.completed` et `settlement.failed` (issue d'un reversement de votre solde vers votre numéro mobile money) : fonction `onSettlement`, contenu typé dans `$event->settlement` (`Settlement` : `id`, `amount`, `fee`, `netAmount`, `currency`, `status`, `createdAt`). `amount` a quitté le solde, `fee` est le frais du versement, à votre charge, `netAmount` arrive sur le numéro. Sur `settlement.failed`, `amount` est recrédité sur le solde. Tous les champs sont facultatifs : `null` s'ils manquent. Avant, ces deux avis n'appelaient aucune fonction ; `$event->data` garde le brut.
+- Installation : `composer require technas/pay:^0.5.0`.
+
 ## 0.4.1 — 2026-11-16
 
 - Sécurité : identifiants validés avant tout appel. Un identifiant de paiement ou de remboursement mis dans un chemin (`getPayment`, `cancelPayment`, `getRefund`, `refund`, `recordExternalRefund`, `simulateTestPayment`) doit correspondre à `[A-Za-z0-9_-]{1,128}` ; sinon `invalid_request` (statut 0, non rejouable), sans appel, et le message ne cite pas la valeur reçue. Avant, `getPayment("../balance")` partait en `/v1/payments/..%2Fbalance` avec votre clé : un proxy qui décode puis normalise le chemin l'aurait envoyé vers une autre route.

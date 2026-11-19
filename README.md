@@ -18,7 +18,7 @@ PHP 8.1 ou plus récent, extension `curl`. Aucune autre dépendance.
 
 ```bash
 composer config repositories.technas-pay vcs https://github.com/Technas-Organization/technas-pay-php
-composer require technas/pay:^0.4.1
+composer require technas/pay:^0.5.0
 ```
 
 Technas vous remet **un secret**. Mettez-le dans les variables d'environnement du serveur :
@@ -69,7 +69,7 @@ http_response_code($result['status']); // 400 si la signature est refusée
 echo json_encode($result['body']);
 ```
 
-Fonctions disponibles : `onCompleted`, `onFailed` (pas définitif), `onExpired` (définitif), `onRefund`, `onTopUp`, `onPayoutDestination`, `onBalanceConverted`, `onFxModeUpdated`, `onCardAccountUpdated`, `onKycRequired` (seuil d'identité, voir plus bas). Une exception dans votre fonction doit remonter : Technas relivrera. Exemples : [examples/](examples).
+Fonctions disponibles : `onCompleted`, `onFailed` (pas définitif), `onExpired` (définitif), `onRefund`, `onTopUp`, `onPayoutDestination`, `onBalanceConverted`, `onFxModeUpdated`, `onCardAccountUpdated`, `onKycRequired` (seuil d'identité, voir plus bas), `onSettlement` (reversement de votre solde vers votre numéro mobile money : `settlement.completed` ou `settlement.failed`, contenu dans `$e->settlement`). Une exception dans votre fonction doit remonter : Technas relivrera. Exemples : [examples/](examples).
 
 ## 4. Pour une app mobile : les routes toutes faites
 

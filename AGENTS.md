@@ -15,7 +15,7 @@ Même API, mêmes règles que les SDK Node (`@technas/pay`), Python et Dart : m�
 
 ```bash
 composer config repositories.technas-pay vcs https://github.com/Technas-Organization/technas-pay-php
-composer require technas/pay:^0.4.1
+composer require technas/pay:^0.5.0
 ```
 
 ## Quelle méthode pour quoi
@@ -191,6 +191,9 @@ $handlers = new WebhookHandlers(onCompleted: function (Event $e) use ($pay): voi
 - **`onRefund`** : prévenez le client, par e-mail ou SMS. Technas ne lui écrit pas.
   - `refund.completed` : l'argent est arrivé, `sentAmount` sur son téléphone.
   - `refund.failed` : rien n'est parti et votre solde est recrédité. Proposez un autre moyen, ou refaites le même appel `refund` : il est permis après un échec.
+- **`onSettlement`** : l'issue d'un reversement de votre solde vers votre numéro mobile money ; contenu dans `$e->settlement` (`id`, `amount`, `fee`, `netAmount`, `currency`, `status`, `createdAt`, chacun `null` s'il manque).
+  - `settlement.completed` : `netAmount` est arrivé sur votre numéro. `amount` a quitté le solde, `fee` est le frais du versement, à votre charge.
+  - `settlement.failed` : rien n'est arrivé et `amount` est recrédité sur votre solde.
 
 ## Paiement par carte (`method: 'card'`)
 

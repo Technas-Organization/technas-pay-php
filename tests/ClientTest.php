@@ -7,6 +7,7 @@ namespace TechnasPay\Tests;
 use PHPUnit\Framework\TestCase;
 use TechnasPay\Model\KycRequired;
 use TechnasPay\Model\Refund;
+use TechnasPay\Model\Settlement;
 use TechnasPay\Status;
 use TechnasPay\TechnasPay;
 use TechnasPay\TechnasPayException;
@@ -394,6 +395,49 @@ final class ClientTest extends TestCase
         $k = $seen[1];
         self::assertSame(['blocked', true, 'blocked', 'amount', 12, 30, '2026-11-03T10:00:00Z'],
             [$k->reason, $k->blocked, $k->stage, $k->blockReason, $k->daysElapsed, $k->graceDays, $k->firstCollectedAt]);
+    }
+
+    public function testAvisReversement(): void
+    {
+        $pay = $this->pay(new FakeTransport());
+        $seen = [];
+        $h = new WebhookHandlers(
+            onSettlement: function (Event $e) use (&$seen) { $seen[] = $e->type . ':' . $e->settlement?->status; },
+            onTopUp: fn () => self::fail('mauvaise fonction'),
+            onRefund: fn () => self::fail('mauvaise fonction'),
+        );
+        $data = ['id' => 'b1e7', 'amount' => 392, 'fee' => 61, 'net_amount' => 331, 'currency' => 'XOF',
+            'status' => 'completed', 'created_at' => '2026-11-19T21:15:59+00:00'];
+        $body = json_encode(['id' => 'evt_s', 'type' => 'settlement.completed', 'created_at' => '2026-11-19T21:18:32+00:00', 'data' => $data]);
+        $r = $pay->handleWebhook($body, Signature::sign($body, self::WEBHOOK_SECRET), $h);
+        self::assertSame(200, $r['status']);
+        $s = $r['event']?->settlement;
+        self::assertInstanceOf(Settlement::class, $s);
+        self::assertSame(['b1e7', 392, 61, 331, 'XOF', 'completed', '2026-11-19T21:15:59+00:00'],
+            [$s->id, $s->amount, $s->fee, $s->netAmount, $s->currency, $s->status, $s->createdAt]);
+        self::assertSame($data, $r['event']?->data, 'le brut reste lisible');
+        self::assertNull($r['event']?->refund);
+        self::assertNull($r['event']?->payment);
+        self::assertSame(400, $pay->handleWebhook($body, Signature::sign($body, 'autre'), $h)['status']);
+
+        // Échec : même contenu, `status` vaut `failed` ; la somme est recréditée côté serveur.
+        $body = json_encode(['id' => 'evt_s2', 'type' => 'settlement.failed', 'created_at' => 'x', 'data' => ['status' => 'failed'] + $data]);
+        $r = $pay->handleWebhook($body, Signature::sign($body, self::WEBHOOK_SECRET), $h);
+        self::assertSame(['failed', 392], [$r['event']?->settlement?->status, $r['event']?->settlement?->amount]);
+
+        // Champs absents ou d'un autre type : null, jamais une exception.
+        $body = json_encode(['id' => 'evt_s3', 'type' => 'settlement.failed', 'created_at' => 'x', 'data' => ['amount' => '392', 'currency' => ['XOF']]]);
+        $r = $pay->handleWebhook($body, Signature::sign($body, self::WEBHOOK_SECRET), $h);
+        self::assertSame(200, $r['status']);
+        $s = $r['event']?->settlement;
+        self::assertInstanceOf(Settlement::class, $s);
+        self::assertSame([null, null, null, null, null, null, null],
+            [$s->id, $s->amount, $s->fee, $s->netAmount, $s->currency, $s->status, $s->createdAt]);
+        self::assertSame(['settlement.completed:completed', 'settlement.failed:failed', 'settlement.failed:'], $seen);
+
+        // Un autre avis ne remplit pas `settlement`.
+        $body = json_encode(['id' => 'evt_t', 'type' => 'balance.topped_up', 'created_at' => 'x', 'data' => ['id' => 't', 'amount' => 5]]);
+        self::assertNull($pay->handleWebhook($body, Signature::sign($body, self::WEBHOOK_SECRET), new WebhookHandlers())['event']?->settlement);
     }
 
     public function testRefusSeuilDIdentiteEtContrat(): void
