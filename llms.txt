@@ -12,6 +12,8 @@ Seuil d'identité : `$pay->getAccountKyc()` (à montrer au marchand), avis `acco
 
 Reversement du solde vers votre numéro mobile money : avis `settlement.completed` et `settlement.failed` (`onSettlement`, `$e->settlement`) ; sur un échec, `amount` est recrédité sur le solde.
 
+Frais : `'fees' => 'customer'` (le client paie frais du réseau + commission ; vous recevez exactement `amount`) ou `'partner'` (le client paie `amount`, frais compris). Devis avant paiement : `$pay->quote(200, country: 'TG', fees: ?)` / `$pay->getFees` → `customerTotal` (à afficher), `processingFee`, `commission`, `netAmount`, `networks` (dont `operatorFeeEstimate`, « environ »). `amount_too_low` → `$e->details['minimumAmount']`. Carte : `'partner'` seulement.
+
 Routes toutes faites pour une app Flutter : `$pay->appRoutes(authorize:, resolveOrder:)` + `SymfonyBridge::handle` (Laravel, Symfony) ou `Psr15Handler`.
 
 - [AGENTS.md](AGENTS.md) : règles pour un agent de code

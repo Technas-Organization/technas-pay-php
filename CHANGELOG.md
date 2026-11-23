@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0 — 2026-11-23
+
+Qui paie les frais, et combien paie le client :
+- `askForPayment` : option `fees` (`'partner'` ou `'customer'`). `'customer'` : le client paie votre prix + les frais du réseau de paiement + la commission Technas, vous recevez exactement `amount` ; `'partner'` : le client paie `amount`, frais compris. Absent : le réglage du compte. Une autre valeur est refusée sans appel (`invalid_request`). Par carte, seulement `'partner'`.
+- `$pay->quote($amount, country:, fees:, method:, network:, currency:)` (`POST /v1/quotes`), et son alias `$pay->getFees(...)` → `Quote` : `method`, `currency`, `country`, `feesPaidBy`, `amount`, `customerAmount`, `customerTotal` (ce que le client paie, à afficher), `processingFee` (frais du réseau de paiement), `commission`, `netAmount` (ce que vous recevez), `networks` (liste de `QuoteNetwork` : `network`, `networkName`, `customerTotal`, `processingFee`, `commission`, `netAmount`, `operatorFeeEstimate`, une estimation des frais propres de l'opérateur, jamais promise, `otpRequired`, `otpInstructions`). Rien n'est créé. Par carte : `processingFee` et `netAmount` null, `networks` vide.
+- `Payment` et l'avis `$event->payment` : `customerAmount` (`amount` sur un serveur ancien), `feesPaidBy` (`'partner'` sur un serveur ancien), `customerTotal` et `processingFee` (`null` sur un serveur ancien).
+- `amount_too_low` : `$e->details['minimumAmount']`.
+- Installation : `composer require technas/pay:^0.6.0`.
+
 ## 0.5.0 — 2026-11-19
 
 - Avis `settlement.completed` et `settlement.failed` (issue d'un reversement de votre solde vers votre numéro mobile money) : fonction `onSettlement`, contenu typé dans `$event->settlement` (`Settlement` : `id`, `amount`, `fee`, `netAmount`, `currency`, `status`, `createdAt`). `amount` a quitté le solde, `fee` est le frais du versement, à votre charge, `netAmount` arrive sur le numéro. Sur `settlement.failed`, `amount` est recrédité sur le solde. Tous les champs sont facultatifs : `null` s'ils manquent. Avant, ces deux avis n'appelaient aucune fonction ; `$event->data` garde le brut.
